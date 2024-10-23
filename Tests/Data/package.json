@@ -1,23 +1,46 @@
 {
     "name": "com.unity.example",
     "version": "1.2.3",
-    "displayName": "Package Example",
     "description": "This is an example package",
+    "displayName": "Package Example",
     "unity": "2019.1",
-    "unityRelease": "0b5",
-    "dependencies": {
-      "com.unity.some-package": "1.0.0",
-      "com.unity.other-package": "2.0.0"
-   },
-   "keywords": [
-      "keyword1",
-      "keyword2",
-      "keyword3"
-    ],
     "author": {
       "name": "Unity",
       "email": "unity@example.com",
       "url": "https://www.unity3d.com"
-    }
+    },
+    "changelogUrl":"https://example.com/changelog.html",
+    "dependencies": {
+      "com.unity.some-package": "1.0.0",
+      "com.unity.other-package": "2.0.0"
+    },
+    "documentationUrl": "https://example.com/",
+    "hideInEditor": true,
+    "keywords": [
+      "keyword1",
+      "keyword2",
+      "keyword3"
+    ],
+    "license": "MIT",
+    "licensesUrl": "https://example.com/licensing.html",
+    "samples": [
+        {
+            "displayName": "HDRP Shaders",
+            "description": "Contains sample shaders for the High Definition render pipeline",
+            "path": "Samples~/SamplesHDRP"
+        },
+        {
+            "displayName": "URP Shaders",
+            "description": "Contains sample shaders for the Universal render pipeline",
+            "path": "Samples~/SamplesUniversalRP"
+        },
+        {
+            "displayName": "Standard RP Shaders",
+            "description": "Contains sample shaders for the Standard render pipeline",
+            "path": "Samples~/SamplesStandard"
+        }
+    ],
+    "type" : "module",
+    "unityRelease": "0b5"
   }
   
