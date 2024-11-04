@@ -1,29 +1,146 @@
 class Package {
+    [PSCustomObject]$Json
+
     # Required properties
-    [string]$Name
-    [PackageVersion]$Version
+    [string]$Name {
+        get { return $this.Name }
+        set { 
+            if (-not $value) {
+                throw 'package.json must have a name'
+            }
+            if ($json.name.Length -gt 214) {
+                throw 'name must be less than 214 characters'
+            }
+            if ($json.name -notmatch '^[a-z0-9-_.]+$') {
+                throw 'name can only contain lowercase letters, numbers, hyphens (-), underscores (_), and periods (.)'
+            }
+            $this.Name = $value
+            $this.Json.name = $value
+        }
+    }
+    [PackageVersion]$Version {
+        get { return $this.Version }
+        set { 
+            if (-not $value) {
+                throw 'package.json must have a version'
+            }
+            $this.Version = $value
+            $this.Json.version = $value.ToString()
+        }
+    }
 
     # Recommended properties
-    [string]$Description
-    [string]$DisplayName
-    [UnityVersion]$Unity
+    [string]$Description {
+        get { return $this.Description }
+        set { 
+            $this.Description = $value
+            $this.Json.description = $value
+        }
+    }
+    [string]$DisplayName {
+        get { return $this.DisplayName }
+        set { 
+            $this.DisplayName = $value
+            $this.Json.displayName = $value
+        }
+    }
+    [UnityVersion]$Unity {
+        get { return $this.Unity }
+        set { 
+            $this.Unity = $value
+            $this.Json.unity = $value.ToString()
+        }
+    }
 
     # Optional properties
-    [Author]$Author
-    [string]$ChangelogUrl
-    [hashtable]$Dependencies
-    [string]$DocumentationUrl
-    [bool]$HideInEditor
-    [string[]]$Keywords
-    [string]$License
-    [string]$LicensesUrl
-    [UnitySample]$Samples
-    [string]$Type
-    [string]$UnityRelease
-    
+    [Author]$Author {
+        get { return $this.Author }
+        set { 
+            $this.Author = $value
+            $this.Json.author = $value
+        }
+    }
+    [string]$ChangelogUrl {
+        get { return $this.ChangelogUrl }
+        set { 
+            $this.ChangelogUrl = $value
+            $this.Json.changelogUrl = $value
+        }
+    }
+    [hashtable]$Dependencies {
+        get { return $this.Dependencies }
+        set { 
+            $this.Dependencies = $value
 
-    Package([string]$json) {
-        if (-not $json.name) {
+            # TODO: fix
+            $this.Json.dependencies = $value
+        }
+    }
+    [string]$DocumentationUrl {
+        get { return $this.DocumentationUrl }
+        set { 
+            $this.DocumentationUrl = $value
+            $this.Json.documentationUrl = $value
+        }
+    }
+    [bool]$HideInEditor {
+        get { return $this.HideInEditor }
+        set { 
+            $this.HideInEditor = $value
+            $this.Json.hideInEditor = $value
+        }
+    }
+    [string[]]$Keywords {
+        get { return $this.Keywords }
+        set { 
+            $this.Keywords = $value
+
+            # TODO: fix
+            $this.Json.keywords = $value
+        }
+    }
+    [string]$License {
+        get { return $this.License }
+        set { 
+            $this.License = $value
+            $this.Json.license = $value
+        }
+    }
+    [string]$LicensesUrl {
+        get { return $this.LicensesUrl }
+        set { 
+            $this.LicensesUrl = $value
+            $this.Json.licensesUrl = $value
+        }
+    }
+    [UnitySample[]]$Samples {
+        get { return $this.Samples }
+        set { 
+            $this.Samples = $value
+
+            # TODO: use ToString
+            $this.Json.samples = $value
+        }
+    }
+    [string]$Type {
+        get { return $this.Type }
+        set { 
+            $this.Type = $value
+            $this.Json.type = $value
+        }
+    }
+    [string]$UnityRelease {
+        get { return $this.UnityRelease }
+        set { 
+            $this.UnityRelease = $value
+            $this.Json.unityRelease = $value
+        }
+    }
+    
+    Package([string]$jsonText) {
+        $Json = $jsonText | ConvertFrom-Json
+
+        if (-not $Json.name) {
             throw 'package.json must have a name'
         }
         if (-not $json.version) {
@@ -32,6 +149,7 @@ class Package {
 
         $this.Name = $json.name
         $this.Version = [PackageVersion]::new($json.version)
+
         $this.Description = $json.description
         $this.DisplayName = $json.displayName
 
@@ -57,6 +175,14 @@ class Package {
         $this.Type = $json.type
         $this.UnityRelease = $json.unityRelease
     }
+
+    [Package] Set-Name([string]$name) {
+        $json = $this.OriginalText | ConvertFrom-Json
+        $json.name = $name
+        $newText = $json | ConvertTo-Json -Depth 100
+        $package = [Package]::new($newText)
+        return $this.OriginalText
+    }
 }
 
 class Author {
@@ -67,7 +193,8 @@ class Author {
     [string]$email
     [string]$url
 
-    Author([string]$json) {
+    Author([string]$jsonText) {
+        $json = $jsonText | ConvertFrom-Json
         if (-not $json.name) {
             throw 'Author must have a name'
         }
@@ -191,7 +318,8 @@ class UnitySample {
     [string]$Description
     [string]$Path
 
-    Sample([string]$json) {
+    Sample([string]$jsonText) {
+        $json = $jsonText | ConvertFrom-Json
         $this.DisplayName = $json.displayName
         $this.Description = $json.description
         $this.Path = $json.path
@@ -225,8 +353,9 @@ function Get-Name {
         [string]$Path
     )
 
-    $json = Get-Content $Path | ConvertFrom-Json
-    $json.name
+    $json = Get-Content $Path
+    $package = [Package]::new($json)
+    return $package.Name
 }
 
 <#
@@ -245,13 +374,10 @@ function Set-Name {
         [string]$Name
     )
 
-    if ($Name -notmatch '^[a-z0-9-_.]+$') {
-        throw 'Name must be lowercase, numbers, hyphens (-), underscores (_), and periods (.) only.'
-    } 
-
-    $json = Get-Content $Path | ConvertFrom-Json
-    $json.name = $Name
-    $json | ConvertTo-Json -Depth 100 | Set-Content $Path
+    $json = Get-Content $Path
+    $package = [Package]::new($json)
+    $newPackage = $package.Set-Name($Name)
+    Set-Content $Path $newPackage
 }
 
 function Get-Version {
@@ -259,8 +385,9 @@ function Get-Version {
         [string]$Path
     )
 
-    $json = Get-Content $Path | ConvertFrom-Json
-    $json.version
+    $json = Get-Content $Path
+    $package = [Package]::new($json)
+    return $package.Version
 }
 
 function Set-Version {
@@ -269,9 +396,8 @@ function Set-Version {
         [string]$Version
     )
 
-    $json = Get-Content $Path | ConvertFrom-Json
-    $json.version = $Version
-    $json | ConvertTo-Json -Depth 100 | Set-Content $Path
+    $json = Get-Content $Path
+    $package = [Package]::new($json)
 }
 
 function Update-Version {
